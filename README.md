@@ -1,2 +1,3 @@
 # Practicas-JavaScript
-Seguimiento de cursos y practicas adicionales
+
+Repositorio para el seguimiento de cursos de JS y practicas adicionales
