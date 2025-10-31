@@ -1,0 +1,112 @@
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: #f5f5f5;
+  overflow: hidden;
+}
+
+h1 {
+  margin: 0;
+  padding: 15px 20px;
+  color: #128e28;
+  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+  text-align: center;
+  font-size: 24px;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-bottom: 3px solid #128e28;
+}
+
+#network {
+  width: 100vw;
+  height: calc(100vh - 120px);
+  background: white;
+  overflow: auto;
+  position: relative;
+}
+
+/* Scroll suave */
+#network::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+#network::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+#network::-webkit-scrollbar-thumb {
+  background: #128e28;
+  border-radius: 6px;
+}
+
+#network::-webkit-scrollbar-thumb:hover {
+  background: #0d6a1f;
+}
+
+/* Leyenda (al final no la use pero a modo de guardar codigo util la mantengo aca, seguramente sea agregado)*/
+.leyenda {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: white;
+  padding: 18px 22px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  font-size: 13px;
+  z-index: 1000;
+  border: 2px solid #128e28;
+}
+
+.leyenda-titulo {
+  font-weight: 700;
+  font-size: 15px;
+  margin-bottom: 12px;
+  color: #128e28;
+}
+
+.leyenda-item {
+  margin: 8px 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.leyenda-color {
+  width: 30px;
+  height: 3px;
+  display: inline-block;
+  border-radius: 2px;
+}
+
+.leyenda-instruccion {
+  margin-top: 15px;
+  padding-top: 12px;
+  border-top: 1px solid #e0e0e0;
+  font-style: italic;
+  color: #666;
+  font-size: 12px;
+}
+
+.nodo rect {
+  transition: stroke 0.2s ease, stroke-width 0.2s ease;
+}
+
+.conexion {
+  transition: stroke 0.2s ease, stroke-width 0.2s ease;
+}
+
+@media (max-width: 768px) {
+  h1 {
+    font-size: 18px;
+    padding: 12px 15px;
+  }
+  
+  .leyenda {
+    bottom: 10px;
+    right: 10px;
+    padding: 12px 16px;
+    font-size: 11px;
+  }
+}
