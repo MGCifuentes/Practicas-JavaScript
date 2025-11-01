@@ -186,7 +186,6 @@ function agregarEventos() {
 }
 
 function actualizarSeleccion() {
-  // Rreset
   const nodos = document.querySelectorAll('.nodo rect');
   const lineas = document.querySelectorAll('.conexion');
 
@@ -206,23 +205,16 @@ function actualizarSeleccion() {
   const nodosSeleccionados = new Set();
   const nodosHabilita = new Set();
   const nodosCorrelativa = new Set();
-  const lineasHabilita = new Set();
-  const lineasCorrelativa = new Set();
-
   materiasSeleccionadas.forEach(id => {
     const materia = materiasCarrera[id];
     nodosSeleccionados.add(id);
     materia.habilita.forEach(habId => {
       nodosHabilita.add(habId);
-      lineasHabilita.add(`${id}->${habId}`);
     });
     materia.correlativas.forEach(corrId => {
       nodosCorrelativa.add(corrId);
-      lineasCorrelativa.add(`${corrId}->${id}`);
     });
   });
-
-  //seleccionado > habilita > correlativa
   nodos.forEach(n => {
     const id = n.parentElement.dataset.id;
     
@@ -240,20 +232,27 @@ function actualizarSeleccion() {
       n.setAttribute('stroke-width', '4');
     }
   });
-
-  //dar priodirdad
   lineas.forEach(l => {
     const from = l.dataset.from;
     const to = l.dataset.to;
-    const lineaKey = `${from}->${to}`;
     
-    //deberia ganar verde siempre sobre rojo
-    if (lineasHabilita.has(lineaKey)) {
+    let esHabilita = false;
+    let esCorrelativa = false;
+    materiasSeleccionadas.forEach(id => {
+      const materia = materiasCarrera[id];
+      if (materia.habilita.includes(to) && from === id) {
+        esHabilita = true;
+      }
+      if (materia.correlativas.includes(from) && to === id) {
+        esCorrelativa = true;
+      }
+    });
+    if (esHabilita) {
       l.dataset.estado = 'habilita';
       l.setAttribute('stroke', '#4caf50'); 
       l.setAttribute('stroke-width', '3'); 
       l.setAttribute('marker-end', 'url(#arrow-habilita)');
-    } else if (lineasCorrelativa.has(lineaKey)) {
+    } else if (esCorrelativa) {
       l.dataset.estado = 'correlativa';
       l.setAttribute('stroke', '#ff5722'); 
       l.setAttribute('stroke-width', '3'); 
