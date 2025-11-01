@@ -187,54 +187,93 @@ function agregarEventos() {
 }
 
 function actualizarSeleccion() {
-  //Resetear estilos
+  // Resetear estilos
   const nodos = document.querySelectorAll('.nodo rect');
   const lineas = document.querySelectorAll('.conexion');
 
   nodos.forEach(n => { n.dataset.estado = ''; n.setAttribute('stroke', '#000000ff'); n.setAttribute('stroke-width', '2.5'); });
   lineas.forEach(l => { l.dataset.estado = ''; l.setAttribute('stroke', '#e0e0e0'); l.setAttribute('stroke-width', '2'); l.setAttribute('marker-end', 'url(#arrow-normal)'); });
 
-  //azul > verde > naranja
+  // Crear un mapa de estados para priorizar correctamente
+  const estadosNodos = new Map();
+  const estadosLineas = new Map();
+
+  // Prioridad: seleccionado > habilita > correlativa
+  const prioridades = { 'seleccionado': 3, 'habilita': 2, 'correlativa': 1 };
+
   materiasSeleccionadas.forEach(id => {
     const materia = materiasCarrera[id];
 
-    //seleccionado → azul
-    const nodo = document.querySelector(`.nodo[data-id="${id}"] rect`);
-    if (nodo) nodo.dataset.estado = 'seleccionado';
+    // Seleccionado → azul
+    estadosNodos.set(id, 'seleccionado');
 
     // Correlativas → naranja
     materia.correlativas.forEach(corrId => {
-      const nodoCorr = document.querySelector(`.nodo[data-id="${corrId}"] rect`);
-      if (nodoCorr && !['seleccionado','habilita'].includes(nodoCorr.dataset.estado)) nodoCorr.dataset.estado = 'correlativa';
+      const estadoActual = estadosNodos.get(corrId);
+      if (!estadoActual || prioridades['correlativa'] > (prioridades[estadoActual] || 0)) {
+        if (estadoActual !== 'seleccionado' && estadoActual !== 'habilita') {
+          estadosNodos.set(corrId, 'correlativa');
+        }
+      }
 
-      const conexion = document.querySelector(`line[data-from="${corrId}"][data-to="${id}"]`);
-      if (conexion && conexion.dataset.estado !== 'habilita') conexion.dataset.estado = 'correlativa';
+      const lineaKey = `${corrId}->${id}`;
+      const estadoLineaActual = estadosLineas.get(lineaKey);
+      if (!estadoLineaActual || prioridades['correlativa'] > (prioridades[estadoLineaActual] || 0)) {
+        if (estadoLineaActual !== 'habilita') {
+          estadosLineas.set(lineaKey, 'correlativa');
+        }
+      }
     });
 
-    // Habilita → verde
+    // Habilita → verde (MAYOR PRIORIDAD que correlativa)
     materia.habilita.forEach(habId => {
-      const nodoHab = document.querySelector(`.nodo[data-id="${habId}"] rect`);
-      if (nodoHab && nodoHab.dataset.estado !== 'seleccionado') nodoHab.dataset.estado = 'habilita';
+      const estadoActual = estadosNodos.get(habId);
+      if (!estadoActual || prioridades['habilita'] > (prioridades[estadoActual] || 0)) {
+        if (estadoActual !== 'seleccionado') {
+          estadosNodos.set(habId, 'habilita');
+        }
+      }
 
-      const conexion = document.querySelector(`line[data-from="${id}"][data-to="${habId}"]`);
-      if (conexion) conexion.dataset.estado = 'habilita';
+      const lineaKey = `${id}->${habId}`;
+      const estadoLineaActual = estadosLineas.get(lineaKey);
+      if (!estadoLineaActual || prioridades['habilita'] > (prioridades[estadoLineaActual] || 0)) {
+        estadosLineas.set(lineaKey, 'habilita');
+      }
     });
   });
 
-  //azul > verde > naranja
+  // Aplicar estados a los nodos
   nodos.forEach(n => {
-    const estado = n.dataset.estado;
-    if (estado === 'seleccionado') { n.setAttribute('stroke', '#2196F3'); n.setAttribute('stroke-width', '4'); }
-    else if (estado === 'habilita') { n.setAttribute('stroke', '#4caf50'); n.setAttribute('stroke-width', '4'); }
-    else if (estado === 'correlativa') { n.setAttribute('stroke', '#ff5722'); n.setAttribute('stroke-width', '4'); }
+    const id = n.parentElement.dataset.id;
+    const estado = estadosNodos.get(id);
+    if (estado) {
+      n.dataset.estado = estado;
+      if (estado === 'seleccionado') { n.setAttribute('stroke', '#2196F3'); n.setAttribute('stroke-width', '4'); }
+      else if (estado === 'habilita') { n.setAttribute('stroke', '#4caf50'); n.setAttribute('stroke-width', '4'); }
+      else if (estado === 'correlativa') { n.setAttribute('stroke', '#ff5722'); n.setAttribute('stroke-width', '4'); }
+    }
   });
 
-  //azul > verde > naranja x2222
+  // Aplicar estados a las líneas
   lineas.forEach(l => {
-    const estado = l.dataset.estado;
-    if (estado === 'habilita') { l.setAttribute('stroke', '#4caf50'); l.setAttribute('stroke-width', '3'); l.setAttribute('marker-end', 'url(#arrow-habilita)'); }
-    else if (estado === 'correlativa') { l.setAttribute('stroke', '#ff5722'); l.setAttribute('stroke-width', '3'); l.setAttribute('marker-end', 'url(#arrow-correlativa)'); }
-    else { l.setAttribute('stroke', '#e0e0e0'); l.setAttribute('stroke-width', '2'); l.setAttribute('marker-end', 'url(#arrow-normal)'); }
+    const from = l.dataset.from;
+    const to = l.dataset.to;
+    const lineaKey = `${from}->${to}`;
+    const estado = estadosLineas.get(lineaKey);
+    
+    if (estado) {
+      l.dataset.estado = estado;
+      if (estado === 'habilita') { 
+        l.setAttribute('stroke', '#4caf50'); 
+        l.setAttribute('stroke-width', '3'); 
+        l.setAttribute('marker-end', 'url(#arrow-habilita)'); 
+      }
+      else if (estado === 'correlativa') { 
+        l.setAttribute('stroke', '#ff5722'); 
+        l.setAttribute('stroke-width', '3'); 
+        l.setAttribute('marker-end', 'url(#arrow-correlativa)'); 
+      }
+    }
   });
 }
 
