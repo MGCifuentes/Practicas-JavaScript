@@ -171,7 +171,6 @@ function crearMapa() {
   agregarEventos();
 }
 
-//si se selecciona una materia, resaltar sus correlativas y las materias que habilita
 let materiasSeleccionadas = new Set();
 
 function agregarEventos() {
@@ -187,92 +186,78 @@ function agregarEventos() {
 }
 
 function actualizarSeleccion() {
-  // Resetear estilos
+  // Rreset
   const nodos = document.querySelectorAll('.nodo rect');
   const lineas = document.querySelectorAll('.conexion');
 
-  nodos.forEach(n => { n.dataset.estado = ''; n.setAttribute('stroke', '#000000ff'); n.setAttribute('stroke-width', '2.5'); });
-  lineas.forEach(l => { l.dataset.estado = ''; l.setAttribute('stroke', '#e0e0e0'); l.setAttribute('stroke-width', '2'); l.setAttribute('marker-end', 'url(#arrow-normal)'); });
-
-  // Crear un mapa de estados para priorizar correctamente
-  const estadosNodos = new Map();
-  const estadosLineas = new Map();
-
-  // Prioridad: seleccionado > habilita > correlativa
-  const prioridades = { 'seleccionado': 3, 'habilita': 2, 'correlativa': 1 };
+  nodos.forEach(n => { 
+    n.dataset.estado = ''; 
+    n.setAttribute('stroke', '#000000ff'); 
+    n.setAttribute('stroke-width', '2.5'); 
+  });
+  
+  lineas.forEach(l => { 
+    l.dataset.estado = ''; 
+    l.setAttribute('stroke', '#e0e0e0'); 
+    l.setAttribute('stroke-width', '2'); 
+    l.setAttribute('marker-end', 'url(#arrow-normal)'); 
+  });
+  if (materiasSeleccionadas.size === 0) return;
+  const nodosSeleccionados = new Set();
+  const nodosHabilita = new Set();
+  const nodosCorrelativa = new Set();
+  const lineasHabilita = new Set();
+  const lineasCorrelativa = new Set();
 
   materiasSeleccionadas.forEach(id => {
     const materia = materiasCarrera[id];
-
-    // Seleccionado → azul
-    estadosNodos.set(id, 'seleccionado');
-
-    // Correlativas → naranja
-    materia.correlativas.forEach(corrId => {
-      const estadoActual = estadosNodos.get(corrId);
-      if (!estadoActual || prioridades['correlativa'] > (prioridades[estadoActual] || 0)) {
-        if (estadoActual !== 'seleccionado' && estadoActual !== 'habilita') {
-          estadosNodos.set(corrId, 'correlativa');
-        }
-      }
-
-      const lineaKey = `${corrId}->${id}`;
-      const estadoLineaActual = estadosLineas.get(lineaKey);
-      if (!estadoLineaActual || prioridades['correlativa'] > (prioridades[estadoLineaActual] || 0)) {
-        if (estadoLineaActual !== 'habilita') {
-          estadosLineas.set(lineaKey, 'correlativa');
-        }
-      }
-    });
-
-    // Habilita → verde (MAYOR PRIORIDAD que correlativa)
+    nodosSeleccionados.add(id);
     materia.habilita.forEach(habId => {
-      const estadoActual = estadosNodos.get(habId);
-      if (!estadoActual || prioridades['habilita'] > (prioridades[estadoActual] || 0)) {
-        if (estadoActual !== 'seleccionado') {
-          estadosNodos.set(habId, 'habilita');
-        }
-      }
-
-      const lineaKey = `${id}->${habId}`;
-      const estadoLineaActual = estadosLineas.get(lineaKey);
-      if (!estadoLineaActual || prioridades['habilita'] > (prioridades[estadoLineaActual] || 0)) {
-        estadosLineas.set(lineaKey, 'habilita');
-      }
+      nodosHabilita.add(habId);
+      lineasHabilita.add(`${id}->${habId}`);
+    });
+    materia.correlativas.forEach(corrId => {
+      nodosCorrelativa.add(corrId);
+      lineasCorrelativa.add(`${corrId}->${id}`);
     });
   });
 
-  // Aplicar estados a los nodos
+  //seleccionado > habilita > correlativa
   nodos.forEach(n => {
     const id = n.parentElement.dataset.id;
-    const estado = estadosNodos.get(id);
-    if (estado) {
-      n.dataset.estado = estado;
-      if (estado === 'seleccionado') { n.setAttribute('stroke', '#2196F3'); n.setAttribute('stroke-width', '4'); }
-      else if (estado === 'habilita') { n.setAttribute('stroke', '#4caf50'); n.setAttribute('stroke-width', '4'); }
-      else if (estado === 'correlativa') { n.setAttribute('stroke', '#ff5722'); n.setAttribute('stroke-width', '4'); }
+    
+    if (nodosSeleccionados.has(id)) {
+      n.dataset.estado = 'seleccionado';
+      n.setAttribute('stroke', '#2196F3'); 
+      n.setAttribute('stroke-width', '4');
+    } else if (nodosHabilita.has(id)) {
+      n.dataset.estado = 'habilita';
+      n.setAttribute('stroke', '#4caf50'); 
+      n.setAttribute('stroke-width', '4');
+    } else if (nodosCorrelativa.has(id)) {
+      n.dataset.estado = 'correlativa';
+      n.setAttribute('stroke', '#ff5722'); 
+      n.setAttribute('stroke-width', '4');
     }
   });
 
-  // Aplicar estados a las líneas
+  //dar priodirdad
   lineas.forEach(l => {
     const from = l.dataset.from;
     const to = l.dataset.to;
     const lineaKey = `${from}->${to}`;
-    const estado = estadosLineas.get(lineaKey);
     
-    if (estado) {
-      l.dataset.estado = estado;
-      if (estado === 'habilita') { 
-        l.setAttribute('stroke', '#4caf50'); 
-        l.setAttribute('stroke-width', '3'); 
-        l.setAttribute('marker-end', 'url(#arrow-habilita)'); 
-      }
-      else if (estado === 'correlativa') { 
-        l.setAttribute('stroke', '#ff5722'); 
-        l.setAttribute('stroke-width', '3'); 
-        l.setAttribute('marker-end', 'url(#arrow-correlativa)'); 
-      }
+    //deberia ganar verde siempre sobre rojo
+    if (lineasHabilita.has(lineaKey)) {
+      l.dataset.estado = 'habilita';
+      l.setAttribute('stroke', '#4caf50'); 
+      l.setAttribute('stroke-width', '3'); 
+      l.setAttribute('marker-end', 'url(#arrow-habilita)');
+    } else if (lineasCorrelativa.has(lineaKey)) {
+      l.dataset.estado = 'correlativa';
+      l.setAttribute('stroke', '#ff5722'); 
+      l.setAttribute('stroke-width', '3'); 
+      l.setAttribute('marker-end', 'url(#arrow-correlativa)');
     }
   });
 }
