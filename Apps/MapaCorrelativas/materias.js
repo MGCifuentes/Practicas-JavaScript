@@ -102,7 +102,7 @@ const materiasCarrera = {
     'topicos_de_programacion': {
       nombre: 'Tópicos de Programación',
       correlativas: ['programacion_estructurada_basica', 'matematica_discreta'],
-      habilita: ['algoritmos_y_estructuras_de_datos', 'bases_de_datos_aplicadas', 'seguridad_de_la_informacion']
+      habilita: ['algoritmos_y_estructuras_de_datos', 'bases_de_datos_aplicadas', 'seguridad_de_la_informacion', 'diseno_de_software']
     },
     'bases_de_datos': {
       nombre: 'Bases de Datos',
